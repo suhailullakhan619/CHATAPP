@@ -1,0 +1,50 @@
+[
+  {
+    "id": "chats",
+    "title": "Chats",
+    "icon": "mdi-forum",
+    "route": "/chats"
+  },
+  {
+    "id": "status",
+    "title": "Status",
+    "icon": "mdi-circle-outline",
+    "route": ""
+  },
+  {
+    "id": "channels",
+    "title": "Channels",
+    "icon": "mdi-bullhorn-outline",
+    "route": ""
+  },
+  {
+    "id": "communities",
+    "title": "Communities",
+    "icon": "mdi-account-group-outline",
+    "route": ""
+  },
+  {
+    "id": "calls",
+    "title": "Calls",
+    "icon": "mdi-phone-outline",
+    "route": ""
+  },
+  {
+    "id": "starred",
+    "title": "Starred Messages",
+    "icon": "mdi-star-outline",
+    "route": ""
+  },
+  {
+    "id": "archived",
+    "title": "Archived Chats",
+    "icon": "mdi-archive-outline",
+    "route": ""
+  },
+  {
+    "id": "settings",
+    "title": "Settings",
+    "icon": "mdi-cog-outline",
+    "route": ""
+  }
+]
