@@ -206,6 +206,13 @@
           <!-- MESSAGES -->
 
           <div class="messages" ref="messageContainer" @scroll="handleScroll">
+          <div
+  v-if="messagesInfiniteScroll.isFetchingMore"
+  class="d-flex align-center justify-center ga-2 text-grey text-caption my-2"
+>
+  <v-progress-circular indeterminate size="18" />
+  Loading older messages...
+</div>
             <div v-for="(msg, index) in messages" :key="msg.message_id">
               <!-- DATE SEPARATOR -->
               <div v-if="shouldShowDate(index)" class="date-separator">
@@ -457,10 +464,10 @@ export default {
       subscriptionsMap: {},
       snackbarComp: {},
       avatarUrlCache: {},
-      messagesInfiniteScroll:{
-nextToken:null,
-isFetchingMore:false,
-hasMoreMessage:true
+      messagesInfiniteScroll: {
+        nextToken: null,
+        isFetchingMore: false,
+        hasMoreMessage: true,
       },
       allUsersList: [],
       avatarHardCodedAvatar: [img1, img2, img3, img4],
@@ -832,15 +839,46 @@ hasMoreMessage:true
       const el = this.$refs.messageContainer;
       if (!el) return;
 
-      const threshold = 120;
+      const threshold = 50;
 
+      // 👇 TOP detection
+      if (
+        el.scrollTop <= 20 &&
+        this.messagesInfiniteScroll.hasMoreMessage &&
+        !this.messagesInfiniteScroll.isFetchingMore
+      ) {
+        this.loadMoreMessages();
+      }
+
+      // existing bottom logic
       const position = el.scrollHeight - el.scrollTop - el.clientHeight;
-
-      this.isNearBottom = position < threshold;
+      this.isNearBottom = position < 120;
 
       if (this.isNearBottom) {
         this.showNewMessageButton = false;
       }
+    },
+    async loadMoreMessages() {
+      if (!this.messagesInfiniteScroll.nextToken) return;
+
+      const el = this.$refs.messageContainer;
+
+      // 👇 store old height
+      const oldHeight = el.scrollHeight;
+
+      this.messagesInfiniteScroll.isFetchingMore = true;
+await new Promise(resolve => setTimeout(resolve, 500));
+      await this.getUserMessagesMethod(
+        this.selectedChat.conversation_id,
+        this.messagesInfiniteScroll.nextToken,
+      );
+
+      setTimeout(() => {
+        const newHeight = el.scrollHeight;
+
+        // 👇 maintain scroll position (VERY IMPORTANT)
+        el.scrollTop = newHeight - oldHeight;
+      });
     },
     async createConversation(user) {
       // check if conversation already exists
@@ -1037,8 +1075,10 @@ hasMoreMessage:true
                 );
               }
             } else {
-         await this.markConversationReadMethod(this.selectedChat.conversation_id);
-            /* ONE TO ONE CHAT */
+              await this.markConversationReadMethod(
+                this.selectedChat.conversation_id,
+              );
+              /* ONE TO ONE CHAT */
               this.messages = this.messages.map((msg) => {
                 if (msg.sender_id === this.currentUser.user_id) {
                   return {
@@ -1121,7 +1161,11 @@ hasMoreMessage:true
       this.loadingChats = true;
       this.groupDrawer = false;
       this.selectedChat = chat;
-      
+this.messagesInfiniteScroll = {
+  nextToken: null,
+  isFetchingMore: false,
+  hasMoreMessage: true,
+};
       await this.getUserMessagesMethod(chat.conversation_id);
       if (
         chat.last_message_sender_id !== this.currentUser.user_id &&
@@ -1129,7 +1173,7 @@ hasMoreMessage:true
       ) {
         await this.markConversationReadMethod(chat.conversation_id);
       }
-chat.unread = 0;
+      chat.unread = 0;
       if (chat.is_group) {
         await this.getGroupMembersMethod(chat.conversation_id);
 
@@ -1148,7 +1192,6 @@ chat.unread = 0;
 
           return msg;
         });
-         
       }
       setTimeout(() => {
         this.scrollToBottom();
@@ -1198,7 +1241,6 @@ chat.unread = 0;
   height: 100%;
   overflow: hidden;
   position: relative;
-  
 }
 
 .messages {
